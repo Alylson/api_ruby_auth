@@ -1,30 +1,28 @@
-# syntax = docker/dockerfile:1
+FROM registry.docker.com/library/ruby:3.3.1-slim
 
-# Define a versão do Ruby
-ARG RUBY_VERSION=3.2.0
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
+WORKDIR /app
 
-# Define o diretório de trabalho
-WORKDIR /rails
-
-# Define o ambiente como desenvolvimento
-ENV RAILS_ENV="development" \
-    BUNDLE_PATH="/usr/local/bundle"
-
-# Instalação de pacotes para desenvolvimento
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libvips pkg-config curl libsqlite3-0 libmysqlclient-dev && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+    apt-get install --no-install-recommends -y \
+    dos2unix \
+    build-essential git \
+    libvips \
+    pkg-config \
+    git \
+    curl \
+    libsqlite3-0 \
+    libmariadb-dev-compat \
+    libmariadb-dev && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-# Copia o Gemfile e Gemfile.lock e instala as dependências
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile ./
+
 RUN bundle install
 
-# Copia o código da aplicação
 COPY . .
 
-# Expõe a porta padrão do Rails
+RUN chmod +x ./bin/*
+
 EXPOSE 3000
 
-# Comando padrão para rodar o servidor Rails
-CMD ["./bin/rails", "server", "-b", "0.0.0.0"]
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
