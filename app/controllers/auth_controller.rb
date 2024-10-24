@@ -5,8 +5,8 @@ class AuthController < ApplicationController
   def register
     user = User.new(user_params)
     if user.save
-      token = encode(user_id: user.id)
-      render json: { token: token, user: user }, status: :created
+      token = JwtService.encode(user_id: user.id)
+      render json: { token: token, user: user.as_json(except: :password_digest) }, status: :created
     else
       render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
     end
@@ -15,12 +15,17 @@ class AuthController < ApplicationController
   # POST /login
   def login
     user = User.find_by(email: params[:email])
-    if user
-      token = encode(user_id: user.id)
-      render json: { token: token, user: user }, status: :ok
+    if user&.authenticate(params[:password])
+      token = JwtService.encode(user_id: user.id)
+      render json: { token: token, user: user.as_json(except: :password_digest) }, status: :ok
     else
-      render json: { errors: 'Credenciais inválidas' }, status: :unauthorized
+      render json: { errors: 'Invalid credentials' }, status: :unauthorized
     end
+  end
+
+  # POST /logout
+  def logout
+    render json: { message: 'Logout successful' }, status: :ok
   end
 
   private

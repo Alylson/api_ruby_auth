@@ -3,7 +3,7 @@ class ApplicationController < ActionController::API
 
   def authorize_request
     header = request.headers['Authorization']
-    if header
+    if header.present?
       token = header.split(' ').last
       begin
         decoded = JwtService.decode(token)
@@ -14,19 +14,5 @@ class ApplicationController < ActionController::API
     else
       render json: { errors: 'Token ausente' }, status: :unauthorized
     end
-  end
-
-  def decode(token)
-    JWT.decode(token, secret_key, true, algorithm: 'HS256')[0].with_indifferent_access
-  end
-
-  def encode(payload)
-    JWT.encode(payload, secret_key)
-  end
-
-  private
-
-  def secret_key
-    'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjozfQ.9YqZ784ZHzD73R5F3ydmkSmh6SweEnUFbpAew3nFHSA'
   end
 end
